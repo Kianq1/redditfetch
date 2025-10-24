@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Reddit Subreddit Search</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    input, button { padding: 8px; font-size: 16px; }
+    .post { margin: 20px 0; border-bottom: 1px solid #ccc; padding-bottom: 10px; }
+    img { max-width: 100%; height: auto; }
+  </style>
+</head>
+<body>
+  <h1>Search Any Reddit Subreddit</h1>
+  <input type="text" id="subredditInput" placeholder="Enter subreddit name (e.g. pics)">
+  <button onclick="fetchSubreddit()">Search</button>
+  <div id="posts"></div>
+
+  <script>
+    async function fetchSubreddit() {
+      const subreddit = document.getElementById('subredditInput').value.trim();
+      if (!subreddit) {
+        alert('Please enter a subreddit name.');
+        return;
+      }
+
+      const url = `https://www.reddit.com/r/${subreddit}/hot.json?limit=50`;
+      const postsContainer = document.getElementById('posts');
+      postsContainer.innerHTML = `<p>Loading posts from r/${subreddit}...</p>`;
+
+      try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Subreddit not found or inaccessible.');
+        const data = await response.json();
+
+        postsContainer.innerHTML = '';
+        data.data.children.forEach(post => {
+          const { title, url, thumbnail, permalink } = post.data;
+          const postDiv = document.createElement('div');
+          postDiv.className = 'post';
+          postDiv.innerHTML = `
+            <h3>${title}</h3>
+            ${thumbnail && thumbnail.startsWith('http') ? `<img src="${thumbnail}" alt="thumbnail">` : ''}
+            <p><a href="https://reddit.com${permalink}" target="_blank">View on Reddit</a></p>
+          `;
+          postsContainer.appendChild(postDiv);
+        });
+      } catch (error) {
+        postsContainer.innerHTML = `<p style="color:red;">Error: ${error.message}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>
